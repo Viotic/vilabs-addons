@@ -20,7 +20,10 @@ RUN apk add --no-cache \
     openssl-dev \
     curl \
     bash \
-    && pip3 install --no-cache-dir --upgrade pip
+    cmake \
+    pkgconfig \
+    linux-headers \
+    && pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
 # Set work directory
 WORKDIR /app
@@ -29,7 +32,9 @@ WORKDIR /app
 RUN mkdir -p /app /data
 
 # Install Open WebUI via pip (compatible with Python 3.12)
-RUN pip3 install --no-cache-dir open-webui
+# Try installing with --only-binary to avoid compilation issues
+RUN pip3 install --no-cache-dir --only-binary=all open-webui || \
+    pip3 install --no-cache-dir --no-binary=opencv-python,opencv-python-headless open-webui
 
 # Build arguments (required for Home Assistant add-ons)
 ARG BUILD_ARCH
