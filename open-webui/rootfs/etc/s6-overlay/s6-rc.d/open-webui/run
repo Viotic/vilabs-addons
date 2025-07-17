@@ -35,8 +35,8 @@ case "$(bashio::config 'log_level')" in
         ;;
 esac
 
-# Change to backend directory
-cd /app/backend || bashio::exit.nok "Cannot change to backend directory"
+# Set data directory for Open WebUI
+cd /data || bashio::exit.nok "Cannot change to data directory"
 
 # Load environment variables
 if [[ -f "/data/.env" ]]; then
@@ -52,7 +52,15 @@ export USE_OLLAMA_DOCKER=false
 
 # Start Open WebUI
 bashio::log.info "Starting Open WebUI server on port 3000..."
-cd /app
+
+# Set required environment variables for Open WebUI
+export DATA_DIR="/data"
+export WEBUI_SECRET_KEY="$(bashio::config 'webui_secret_key')"
+export ENABLE_SIGNUP="$(bashio::config 'enable_signup')"
+export ENABLE_LOGIN_FORM="$(bashio::config 'enable_login_form')"
+export OLLAMA_BASE_URL="$(bashio::config 'ollama_base_url')"
+
+# Start Open WebUI using the pip-installed command
 exec open-webui serve \
     --host 0.0.0.0 \
     --port 3000
