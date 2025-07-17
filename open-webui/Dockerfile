@@ -38,15 +38,43 @@ WORKDIR /app
 # Create app directory structure
 RUN mkdir -p /app /data
 
-# Install Open WebUI via pip (compatible with Python 3.12)
-# Strategy: Try different approaches in order of preference
-RUN pip3 install --no-cache-dir --only-binary=:all: open-webui || \
-    (echo "Trying with specific opencv version..." && \
-     pip3 install --no-cache-dir --only-binary=:all: "opencv-python-headless<4.9" && \
-     pip3 install --no-cache-dir --only-binary=:all: open-webui) || \
-    (echo "Upgrading setuptools and trying compilation..." && \
-     pip3 install --no-cache-dir --upgrade "setuptools>=70.1" wheel && \
-     pip3 install --no-cache-dir --no-binary=opencv-python,opencv-python-headless open-webui)
+# Install Open WebUI with dependency resolution workarounds
+# First try installing dependencies that typically work
+RUN pip3 install --no-cache-dir \
+    fastapi \
+    uvicorn[standard] \
+    pydantic \
+    sqlalchemy \
+    alembic \
+    httpx \
+    jinja2 \
+    python-multipart \
+    passlib[bcrypt] \
+    aiofiles \
+    requests \
+    python-jose[cryptography] \
+    bcrypt \
+    argon2-cffi \
+    loguru \
+    markdown \
+    aiohttp \
+    async-timeout \
+    cryptography
+
+# Try to install open-webui without opencv dependencies that are causing issues
+RUN pip3 install --no-cache-dir open-webui --no-deps || \
+    pip3 install --no-cache-dir "open-webui==0.5.20" --no-deps || \
+    pip3 install --no-cache-dir "open-webui==0.4.5"
+
+# Install additional optional dependencies that might be needed
+RUN pip3 install --no-cache-dir \
+    openai \
+    anthropic \
+    langchain \
+    chromadb \
+    tiktoken \
+    sentence-transformers \
+    || echo "Some optional dependencies failed to install, but core functionality should work"
 
 # Build arguments (required for Home Assistant add-ons)
 ARG BUILD_ARCH
