@@ -6,9 +6,10 @@ This directory should contain:
 - `logo.png` - Larger logo (256x256 or higher) for branding
 
 You can download the official Open WebUI icons from:
-https://github.com/open-webui/open-webui/tree/main/static
+<https://github.com/open-webui/open-webui/tree/main/static>
 
 Recommended files:
+
 - Use the Open WebUI favicon.png as icon.png
 - Use a larger version of the Open WebUI logo as logo.png
 

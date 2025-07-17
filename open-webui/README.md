@@ -25,13 +25,16 @@ This add-on brings Open WebUI to your Home Assistant environment, providing a be
 ## Installation
 
 1. Add this repository to your Home Assistant add-on store:
+
+   ```txt
+   https://github.com/Viotic/vilabs-addons
    ```
-   https://github.com/your-username/hassio-addons
-   ```
+
 2. Install the "Open WebUI" add-on
 3. Configure your settings (especially the Ollama URL if using Ollama)
 4. Start the add-on
-5. **Access through the Home Assistant interface** - The add-on will appear in your sidebar for easy access!
+5. **Access through the Home Assistant interface** - The add-on will appear in
+   your sidebar for easy access!
 
 ## Show in Sidebar
 
@@ -72,7 +75,8 @@ For support and questions:
 
 ## License
 
-MIT License - see [LICENSE](https://github.com/open-webui/open-webui/blob/main/LICENSE) for details.
+MIT License - see [LICENSE](https://github.com/open-webui/open-webui/blob/main/LICENSE)
+for details.
 
 [awesome-shield]: https://img.shields.io/badge/awesome%3F-yes-brightgreen.svg
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg

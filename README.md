@@ -7,8 +7,8 @@ A collection of Home Assistant add-ons for enhanced functionality.
 
 ## Installation
 
-Adding this add-ons repository to your Home Assistant instance is pretty simple. In the
-Home Assistant add-on store, a possibility to add a repository is provided.
+Adding this add-ons repository to your Home Assistant instance is pretty simple.
+In the Home Assistant add-on store, a possibility to add a repository is provided.
 
 Use the following URL to add this repository:
 

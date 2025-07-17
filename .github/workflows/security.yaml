@@ -117,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python', 'javascript' ]
+        language: ['python', 'javascript']
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4

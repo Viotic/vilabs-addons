@@ -1,12 +1,15 @@
 # Home Assistant Add-on: Open WebUI
 
-A beautiful and modern web interface for interacting with your local AI models through Ollama and other LLM providers.
+A beautiful and modern web interface for interacting with your local AI models
+through Ollama and other LLM providers.
 
 ![Open WebUI Logo][logo]
 
 ## About
 
-Open WebUI is a user-friendly, feature-rich, and highly customizable web interface designed to operate entirely offline. It supports various LLM runners including Ollama and OpenAI-compatible APIs.
+Open WebUI is a user-friendly, feature-rich, and highly customizable web interface
+designed to operate entirely offline. It supports various LLM runners including
+Ollama and OpenAI-compatible APIs.
 
 Key features include:
 
@@ -20,11 +23,12 @@ Key features include:
 ## Installation
 
 1. Navigate to the Home Assistant Add-on Store
-2. Add this repository URL: `https://github.com/[your-repo]/hassio-addons`
+2. Add this repository URL: `https://github.com/Viotic/vilabs-addons`
 3. Install the "Open WebUI" add-on
 4. Configure the add-on settings
 5. Start the add-on
-6. **Access via sidebar** - Open WebUI will appear in your Home Assistant sidebar!
+6. **Access via sidebar** - Open WebUI will appear in your Home Assistant
+   sidebar!
 
 ## Sidebar Integration
 
@@ -61,15 +65,18 @@ model_filter_list: ""
 
 ### Option: `log_level`
 
-The log level for the add-on. Can be `trace`, `debug`, `info`, `notice`, `warning`, `error`, or `fatal`.
+The log level for the add-on. Can be `trace`, `debug`, `info`, `notice`,
+`warning`, `error`, or `fatal`.
 
 ### Option: `ollama_base_url`
 
-The base URL for your Ollama instance. If running Ollama as another Home Assistant add-on, use `http://supervisor:11434`.
+The base URL for your Ollama instance. If running Ollama as another Home Assistant
+add-on, use `http://supervisor:11434`.
 
 ### Option: `webui_secret_key`
 
-Secret key used for session management. If left empty, a random key will be generated automatically.
+Secret key used for session management. If left empty, a random key will be
+generated automatically.
 
 ### Option: `default_models`
 
@@ -89,7 +96,8 @@ Enable web search functionality in conversations.
 
 ### Option: `web_search_engine`
 
-The search engine to use for web searches. Options: `duckduckgo`, `google`, `brave`, `searxng`.
+The search engine to use for web searches. Options: `duckduckgo`, `google`,
+`brave`, `searxng`.
 
 ### Option: `enable_image_generation`
 
