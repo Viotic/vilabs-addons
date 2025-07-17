@@ -1,0 +1,20 @@
+---
+# Configuration file for yamllint
+
+extends: default
+
+rules:
+  # 120 chars should be enough
+  line-length:
+    max: 120
+    level: warning
+
+  # Accept only YAML 1.2 instead of 1.1
+  document-start: disable
+
+  # Disable empty values
+  empty-values: disable
+
+  # Allow truthy values for on:
+  truthy:
+    allowed-values: ["true", "false", "on"]

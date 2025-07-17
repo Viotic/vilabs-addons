@@ -1,0 +1,18 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Add-on: Open WebUI
+# Handle Open WebUI finish
+# ==============================================================================
+
+declare exit_code
+readonly exit_code="${1}"
+
+bashio::log.info "Open WebUI service stopped with exit code ${exit_code}"
+
+if [[ "${exit_code}" -ne 0 ]] && [[ "${exit_code}" -ne 256 ]]; then
+    bashio::log.warning "Open WebUI exited with code ${exit_code}"
+    bashio::log.warning "Check the logs above for more information"
+fi
+
+bashio::log.info "Service finished"

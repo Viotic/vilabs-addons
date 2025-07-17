@@ -1,0 +1,69 @@
+---
+version: 2
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    reviewers:
+      - "${{ github.repository_owner }}"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/open-webui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "open-webui"
+    reviewers:
+      - "${{ github.repository_owner }}"
+
+  # Python (if requirements.txt or similar exists in add-ons)
+  - package-ecosystem: "pip"
+    directory: "/open-webui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "python"
+      - "open-webui"
+    reviewers:
+      - "${{ github.repository_owner }}"
+
+  # NPM (if package.json exists in add-ons)
+  - package-ecosystem: "npm"
+    directory: "/open-webui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "open-webui"
+    reviewers:
+      - "${{ github.repository_owner }}"

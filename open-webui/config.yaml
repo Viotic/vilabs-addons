@@ -1,0 +1,81 @@
+---
+name: Open WebUI
+version: 1.0.0
+slug: open-webui
+description: Open WebUI for Local AI Models - Chat interface for Ollama and other LLMs
+url: https://github.com/open-webui/open-webui
+codenotary: vilabs-prox@home.local
+init: false
+arch:
+  - aarch64
+  - amd64
+  - armv7
+startup: services
+webui: "http://[HOST]:[PORT:3000]"
+ports:
+  3000/tcp: 3000
+ports_description:
+  3000/tcp: Open WebUI web interface
+map:
+  - data:rw
+  - config:rw
+  - ssl:ro
+options:
+  log_level: info
+  ollama_base_url: "http://supervisor:11434"
+  webui_secret_key: ""
+  default_models: ""
+  enable_signup: true
+  enable_login_form: true
+  enable_web_search: false
+  web_search_engine: "duckduckgo"
+  enable_image_generation: false
+  automatic_1111_base_url: ""
+  comfyui_base_url: ""
+  openai_api_base_url: ""
+  openai_api_key: ""
+  enable_model_filter: false
+  model_filter_list: ""
+schema:
+  log_level: list(trace|debug|info|notice|warning|error|fatal)
+  ollama_base_url: str
+  webui_secret_key: str?
+  default_models: str?
+  enable_signup: bool
+  enable_login_form: bool
+  enable_web_search: bool
+  web_search_engine: list(duckduckgo|google|brave|searxng)
+  enable_image_generation: bool
+  automatic_1111_base_url: str?
+  comfyui_base_url: str?
+  openai_api_base_url: str?
+  openai_api_key: str?
+  enable_model_filter: bool
+  model_filter_list: str?
+ingress: true
+ingress_port: 3000
+ingress_entry: "/"
+panel_icon: mdi:robot-excited
+panel_title: Open WebUI
+panel_admin: true
+hassio_api: true
+hassio_role: manager
+host_network: false
+privileged: []
+full_access: false
+homeassistant_api: false
+environment:
+  OLLAMA_BASE_URL: "ollama_base_url"
+  WEBUI_SECRET_KEY: "webui_secret_key"
+  DEFAULT_MODELS: "default_models"
+  ENABLE_SIGNUP: "enable_signup"
+  ENABLE_LOGIN_FORM: "enable_login_form"
+  ENABLE_WEB_SEARCH: "enable_web_search"
+  WEB_SEARCH_ENGINE: "web_search_engine"
+  ENABLE_IMAGE_GENERATION: "enable_image_generation"
+  AUTOMATIC1111_BASE_URL: "automatic_1111_base_url"
+  COMFYUI_BASE_URL: "comfyui_base_url"
+  OPENAI_API_BASE_URL: "openai_api_base_url"
+  OPENAI_API_KEY: "openai_api_key"
+  ENABLE_MODEL_FILTER: "enable_model_filter"
+  MODEL_FILTER_LIST: "model_filter_list"

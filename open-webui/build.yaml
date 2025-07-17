@@ -1,0 +1,13 @@
+---
+build_from:
+  aarch64: ghcr.io/hassio-addons/base-python:18.0.3
+  amd64: ghcr.io/hassio-addons/base-python:18.0.3
+  armv7: ghcr.io/hassio-addons/base-python:18.0.3
+labels:
+  org.opencontainers.image.title: "Open WebUI"
+  org.opencontainers.image.description: "Open WebUI for Local AI Models"
+  org.opencontainers.image.source: "https://github.com/open-webui/open-webui"
+  org.opencontainers.image.licenses: "MIT"
+codenotary:
+  base_image: codenotary@frenck.dev
+  signer: vilabs-prox@home.local

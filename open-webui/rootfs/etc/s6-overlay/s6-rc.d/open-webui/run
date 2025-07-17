@@ -1,0 +1,58 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Add-on: Open WebUI
+# Runs the Open WebUI server
+# ==============================================================================
+
+bashio::log.info "Starting Open WebUI..."
+
+# Set log level
+case "$(bashio::config 'log_level')" in
+    trace)
+        export LOG_LEVEL="TRACE"
+        ;;
+    debug)
+        export LOG_LEVEL="DEBUG"
+        ;;
+    info)
+        export LOG_LEVEL="INFO"
+        ;;
+    notice)
+        export LOG_LEVEL="INFO"
+        ;;
+    warning)
+        export LOG_LEVEL="WARNING"
+        ;;
+    error)
+        export LOG_LEVEL="ERROR"
+        ;;
+    fatal)
+        export LOG_LEVEL="CRITICAL"
+        ;;
+    *)
+        export LOG_LEVEL="INFO"
+        ;;
+esac
+
+# Change to backend directory
+cd /app/backend || bashio::exit.nok "Cannot change to backend directory"
+
+# Load environment variables
+if [[ -f "/data/.env" ]]; then
+    # shellcheck disable=SC1091
+    source /data/.env
+fi
+
+# Set additional environment variables
+export WEBUI_AUTH_TRUSTED_EMAIL_HEADER=""
+export WEBUI_AUTH_TRUSTED_NAME_HEADER=""
+export USE_CUDA_DOCKER=false
+export USE_OLLAMA_DOCKER=false
+
+# Start Open WebUI
+bashio::log.info "Starting Open WebUI server on port 3000..."
+exec python -m uvicorn main:app \
+    --host 0.0.0.0 \
+    --port 3000 \
+    --log-level "${LOG_LEVEL,,}"

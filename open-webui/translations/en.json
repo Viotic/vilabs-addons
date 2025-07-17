@@ -1,0 +1,64 @@
+{
+    "configuration": {
+        "log_level": {
+            "name": "Log level",
+            "description": "Controls the level of log output by the addon."
+        },
+        "ollama_base_url": {
+            "name": "Ollama Base URL",
+            "description": "The base URL for your Ollama instance (e.g., http://supervisor:11434)"
+        },
+        "webui_secret_key": {
+            "name": "WebUI Secret Key",
+            "description": "Secret key for session management. Leave empty for auto-generation."
+        },
+        "default_models": {
+            "name": "Default Models",
+            "description": "Comma-separated list of default models to load on startup."
+        },
+        "enable_signup": {
+            "name": "Enable User Signup",
+            "description": "Allow new users to create accounts."
+        },
+        "enable_login_form": {
+            "name": "Enable Login Form",
+            "description": "Show login form on the interface."
+        },
+        "enable_web_search": {
+            "name": "Enable Web Search",
+            "description": "Enable web search functionality in conversations."
+        },
+        "web_search_engine": {
+            "name": "Web Search Engine",
+            "description": "Search engine to use for web searches."
+        },
+        "enable_image_generation": {
+            "name": "Enable Image Generation",
+            "description": "Enable image generation features."
+        },
+        "automatic_1111_base_url": {
+            "name": "Automatic1111 Base URL",
+            "description": "Base URL for Automatic1111 Stable Diffusion instance."
+        },
+        "comfyui_base_url": {
+            "name": "ComfyUI Base URL",
+            "description": "Base URL for ComfyUI instance."
+        },
+        "openai_api_base_url": {
+            "name": "OpenAI API Base URL",
+            "description": "Base URL for OpenAI-compatible API endpoints."
+        },
+        "openai_api_key": {
+            "name": "OpenAI API Key",
+            "description": "API key for OpenAI or compatible services."
+        },
+        "enable_model_filter": {
+            "name": "Enable Model Filter",
+            "description": "Enable filtering of available models."
+        },
+        "model_filter_list": {
+            "name": "Model Filter List",
+            "description": "Comma-separated list of models to show when filtering is enabled."
+        }
+    }
+}

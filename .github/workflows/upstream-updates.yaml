@@ -1,0 +1,166 @@
+---
+name: Upstream Updates
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    # Run every day at 6:00 AM UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  check-open-webui-updates:
+    name: 🔍 Check Open WebUI updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Get latest Open WebUI release
+        id: upstream
+        run: |
+          # Get latest release from Open WebUI
+          latest_release=$(curl -s "https://api.github.com/repos/open-webui/open-webui/releases/latest" | jq -r '.tag_name')
+          latest_version=${latest_release#v}
+
+          echo "Latest upstream version: $latest_version"
+          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
+          echo "latest_release=$latest_release" >> $GITHUB_OUTPUT
+
+          # Get current version from config
+          current_version=$(yq eval '.version' open-webui/config.yaml)
+          echo "Current add-on version: $current_version"
+          echo "current_version=$current_version" >> $GITHUB_OUTPUT
+
+          # Check if update is needed
+          if [[ "$latest_version" != "$current_version" ]]; then
+            echo "Update available!"
+            echo "update_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "No update needed"
+            echo "update_available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📝 Get release notes
+        if: steps.upstream.outputs.update_available == 'true'
+        id: release_notes
+        run: |
+          # Get release notes from latest release
+          release_notes=$(curl -s "https://api.github.com/repos/open-webui/open-webui/releases/latest" | jq -r '.body')
+
+          # Escape for GitHub output
+          release_notes="${release_notes//'%'/'%25'}"
+          release_notes="${release_notes//$'\n'/'%0A'}"
+          release_notes="${release_notes//$'\r'/'%0D'}"
+
+          echo "release_notes=$release_notes" >> $GITHUB_OUTPUT
+
+      - name: 🔄 Update add-on version
+        if: steps.upstream.outputs.update_available == 'true'
+        run: |
+          cd open-webui
+
+          # Update version in config.yaml
+          yq eval '.version = "${{ steps.upstream.outputs.latest_version }}"' -i config.yaml
+
+          # Update version in any documentation
+          if [[ -f "README.md" ]]; then
+            sed -i "s/version: [0-9]\+\.[0-9]\+\.[0-9]\+/version: ${{ steps.upstream.outputs.latest_version }}/g" README.md
+          fi
+
+      - name: 🔄 Update Dockerfile if needed
+        if: steps.upstream.outputs.update_available == 'true'
+        run: |
+          cd open-webui
+
+          # Check if Dockerfile needs to be updated to use specific version
+          if grep -q "git clone.*open-webui" Dockerfile; then
+            # Update git clone to use specific tag
+            sed -i "s|git clone https://github.com/open-webui/open-webui.git|git clone --branch ${{ steps.upstream.outputs.latest_release }} https://github.com/open-webui/open-webui.git|g" Dockerfile
+          fi
+
+      - name: 🚀 Create Pull Request
+        if: steps.upstream.outputs.update_available == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            ⬆️ Update Open WebUI to ${{ steps.upstream.outputs.latest_version }}
+
+            Update Open WebUI add-on to version ${{ steps.upstream.outputs.latest_version }}
+
+            Upstream release: ${{ steps.upstream.outputs.latest_release }}
+          title: "⬆️ Update Open WebUI to ${{ steps.upstream.outputs.latest_version }}"
+          body: |
+            ## What's changed
+
+            This PR updates the Open WebUI add-on to version `${{ steps.upstream.outputs.latest_version }}`.
+
+            ### Upstream Changes
+
+            **Release:** [${{ steps.upstream.outputs.latest_release }}](https://github.com/open-webui/open-webui/releases/tag/${{ steps.upstream.outputs.latest_release }})
+
+            ${{ steps.release_notes.outputs.release_notes }}
+
+            ### Changes in this PR
+
+            - Updated add-on version from `${{ steps.upstream.outputs.current_version }}` to `${{ steps.upstream.outputs.latest_version }}`
+            - Updated Dockerfile to use the latest release
+            - Updated documentation (if applicable)
+
+            ## Type of change
+
+            - [x] Upstream update
+
+            ## Testing
+
+            - [ ] I have tested these changes locally
+            - [ ] The add-on builds successfully
+            - [ ] The add-on starts without errors
+
+            ## Notes
+
+            This is an automated update created by the upstream update workflow. Please review the upstream changes and test thoroughly before merging.
+          branch: update-open-webui-${{ steps.upstream.outputs.latest_version }}
+          delete-branch: true
+          labels: |
+            upstream-update
+            open-webui
+            enhancement
+
+  check-base-image-updates:
+    name: 🔍 Check base image updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Check hassio-addons base image updates
+        run: |
+          # Get current base image version
+          current_base=$(yq eval '.build_from.amd64' open-webui/build.yaml)
+          echo "Current base image: $current_base"
+
+          # Extract version
+          current_version=$(echo $current_base | cut -d':' -f2)
+
+          # Get latest version from hassio-addons/docker-base releases
+          latest_version=$(curl -s "https://api.github.com/repos/hassio-addons/docker-base/tags" | jq -r '.[0].name')
+          echo "Latest base image version: $latest_version"
+
+          if [[ "$current_version" != "$latest_version" ]]; then
+            echo "Base image update available: $current_version -> $latest_version"
+
+            # Update build.yaml
+            new_base="ghcr.io/hassio-addons/base-python:$latest_version"
+            sed -i "s|$current_base|$new_base|g" open-webui/build.yaml
+
+            # Create PR would go here (similar to above)
+            echo "Would create PR for base image update"
+          else
+            echo "Base image is up to date"
+          fi

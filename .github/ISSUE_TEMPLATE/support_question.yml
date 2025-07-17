@@ -1,0 +1,39 @@
+---
+name: 🆘 Support Question
+about: Ask for help with configuration or usage
+title: '🆘 [ADD-ON NAME] - Brief description of your question'
+labels: ["question", "support"]
+assignees: []
+
+---
+
+## Support Question
+
+### Add-on
+**Add-on name:** (e.g., Open WebUI)
+**Add-on version:** (e.g., 1.0.0)
+
+### Environment
+**Home Assistant version:** (e.g., 2024.1.0)
+**Home Assistant installation type:** (e.g., Home Assistant OS, Container, Core)
+
+### Question
+A clear and concise description of what you need help with.
+
+### What I've tried
+- [ ] Read the add-on documentation
+- [ ] Searched the issues for similar questions
+- [ ] Checked the Home Assistant community forum
+
+### Configuration
+```yaml
+# Please include your current add-on configuration (remove sensitive information)
+```
+
+### Additional Context
+Add any other context, logs, or screenshots that might help answer your question.
+
+### Checklist
+- [ ] This is a question about configuration or usage
+- [ ] I have checked the documentation first
+- [ ] I have searched for similar questions

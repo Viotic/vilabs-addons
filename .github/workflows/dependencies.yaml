@@ -1,0 +1,135 @@
+---
+name: Dependency Updates
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  information:
+    name: Gather add-on information
+    runs-on: ubuntu-latest
+    outputs:
+      addons: ${{ steps.addons.outputs.addons }}
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 🚀 Run add-on list action
+        id: addons
+        uses: home-assistant/actions/helpers/find-addons@master
+
+  update-base-images:
+    name: 🔄 Update base images
+    runs-on: ubuntu-latest
+    needs:
+      - information
+    strategy:
+      matrix:
+        addon: ${{ fromJson(needs.information.outputs.addons) }}
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔄 Update base image versions
+        id: update
+        run: |
+          cd ${{ matrix.addon }}
+
+          # Get current base image
+          current_base=$(yq eval '.build_from.amd64' build.yaml)
+          base_name=$(echo $current_base | cut -d':' -f1)
+
+          # Get latest tag for base image
+          if [[ $base_name == *"hassio-addons"* ]]; then
+            latest_tag=$(curl -s "https://api.github.com/repos/hassio-addons/docker-base/tags" | jq -r '.[0].name')
+            new_base="${base_name}:${latest_tag}"
+          else
+            # For other base images, try to get latest from registry
+            echo "Skipping unknown base image: $base_name"
+            exit 0
+          fi
+
+          if [[ "$current_base" != "$new_base" ]]; then
+            echo "Updating base image from $current_base to $new_base"
+            sed -i "s|$current_base|$new_base|g" build.yaml
+            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "old_version=$current_base" >> $GITHUB_OUTPUT
+            echo "new_version=$new_base" >> $GITHUB_OUTPUT
+          else
+            echo "Base image is up to date"
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔄 Create Pull Request
+        if: steps.update.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            ⬆️ Update ${{ matrix.addon }} base image
+
+            Update base image from ${{ steps.update.outputs.old_version }} to ${{ steps.update.outputs.new_version }}
+          title: "⬆️ Update ${{ matrix.addon }} base image"
+          body: |
+            ## What's changed
+
+            This PR updates the base image for the `${{ matrix.addon }}` add-on.
+
+            - **From:** `${{ steps.update.outputs.old_version }}`
+            - **To:** `${{ steps.update.outputs.new_version }}`
+
+            ## Type of change
+
+            - [x] Dependency update
+
+            ## Notes
+
+            This is an automated dependency update created by the dependency update workflow.
+          branch: update-${{ matrix.addon }}-base-image
+          delete-branch: true
+          labels: |
+            dependencies
+            ${{ matrix.addon }}
+
+  update-alpine-packages:
+    name: 🔄 Check Alpine package updates
+    runs-on: ubuntu-latest
+    needs:
+      - information
+    strategy:
+      matrix:
+        addon: ${{ fromJson(needs.information.outputs.addons) }}
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check for Alpine package updates
+        run: |
+          cd ${{ matrix.addon }}
+
+          # Extract Alpine packages from Dockerfile
+          if [[ -f Dockerfile ]]; then
+            packages=$(grep -E "apk add.*=" Dockerfile | sed 's/.*apk add[^a-zA-Z]*//g' | tr '\' ' ' | tr '\n' ' ')
+            if [[ -n "$packages" ]]; then
+              echo "Found Alpine packages in ${{ matrix.addon }}: $packages"
+              echo "⚠️ Consider checking for updates to Alpine packages in ${{ matrix.addon }}" >> $GITHUB_STEP_SUMMARY
+              echo "Packages: $packages" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+  dependabot-auto-merge:
+    name: 🤖 Auto-merge Dependabot PRs
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: 🔄 Auto-merge Dependabot PRs
+        uses: pascalgn/merge-action@v0.15.6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          merge_method: squash

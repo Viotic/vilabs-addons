@@ -1,0 +1,273 @@
+---
+name: Quality Assurance
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  schedule:
+    # Run every Sunday at 3:00 AM UTC
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+jobs:
+  pre-commit:
+    name: 🧹 Pre-commit checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 🏗 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 🔧 Install pre-commit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pre-commit
+
+      - name: 🧹 Run pre-commit on all files
+        run: |
+          pre-commit run --all-files
+
+  shellcheck:
+    name: 🐚 Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 🐚 Run Shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './open-webui'
+
+  addon-validation:
+    name: 🔍 Add-on validation
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        addon:
+          - open-webui
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 🔍 Validate add-on configuration
+        run: |
+          cd ${{ matrix.addon }}
+
+          # Check required files exist
+          required_files=("config.yaml" "Dockerfile" "README.md" "DOCS.md")
+          for file in "${required_files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "❌ Missing required file: $file"
+              exit 1
+            fi
+          done
+
+          # Validate config.yaml structure
+          python3 -c "
+          import yaml
+          import sys
+
+          try:
+              with open('config.yaml', 'r') as f:
+                  config = yaml.safe_load(f)
+
+              required_keys = ['name', 'version', 'slug', 'description', 'arch']
+              for key in required_keys:
+                  if key not in config:
+                      print(f'❌ Missing required key in config.yaml: {key}')
+                      sys.exit(1)
+
+              print('✅ config.yaml validation passed')
+          except Exception as e:
+              print(f'❌ config.yaml validation failed: {e}')
+              sys.exit(1)
+          "
+
+      - name: 🔍 Validate Dockerfile
+        run: |
+          cd ${{ matrix.addon }}
+
+          # Check Dockerfile follows best practices
+          if ! grep -q "ARG BUILD_FROM" Dockerfile; then
+            echo "❌ Dockerfile should use ARG BUILD_FROM"
+            exit 1
+          fi
+
+          if ! grep -q "COPY rootfs" Dockerfile; then
+            echo "❌ Dockerfile should copy rootfs"
+            exit 1
+          fi
+
+          echo "✅ Dockerfile validation passed"
+
+      - name: 🔍 Check for security issues
+        run: |
+          cd ${{ matrix.addon }}
+
+          # Check for common security issues
+          security_issues=()
+
+          # Check if running as root
+          if grep -q "USER root" Dockerfile; then
+            security_issues+=("Running as root user")
+          fi
+
+          # Check for hardcoded secrets
+          if grep -qE "(password|secret|key|token).*=" config.yaml; then
+            security_issues+=("Potential hardcoded secrets in config.yaml")
+          fi
+
+          # Check for insecure practices
+          if grep -qE "curl.*http://" Dockerfile; then
+            security_issues+=("Using insecure HTTP in Dockerfile")
+          fi
+
+          if [[ ${#security_issues[@]} -gt 0 ]]; then
+            echo "⚠️ Security issues found:"
+            printf '%s\n' "${security_issues[@]}"
+          else
+            echo "✅ No obvious security issues found"
+          fi
+
+  addon-size-check:
+    name: 📏 Add-on size check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        addon:
+          - open-webui
+        arch:
+          - amd64  # Only check one arch for size
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 🏗 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 📏 Build and check image size
+        run: |
+          cd ${{ matrix.addon }}
+
+          # Build the image
+          docker build -t ${{ matrix.addon }}:test .
+
+          # Get image size
+          size=$(docker image inspect ${{ matrix.addon }}:test --format='{{.Size}}')
+          size_mb=$((size / 1024 / 1024))
+
+          echo "Image size: ${size_mb}MB"
+
+          # Warn if image is very large (>2GB)
+          if [[ $size_mb -gt 2048 ]]; then
+            echo "⚠️ Warning: Image size is quite large (${size_mb}MB)"
+            echo "Consider optimizing the Dockerfile to reduce size"
+          else
+            echo "✅ Image size is reasonable (${size_mb}MB)"
+          fi
+
+          # Output size for comparison
+          echo "IMAGE_SIZE_MB=${size_mb}" >> $GITHUB_ENV
+
+  performance-test:
+    name: ⚡ Performance test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        addon:
+          - open-webui
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 🏗 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: ⚡ Build and test startup time
+        run: |
+          cd ${{ matrix.addon }}
+
+          # Build the image
+          docker build -t ${{ matrix.addon }}:test .
+
+          # Test startup time
+          echo "Testing container startup time..."
+          start_time=$(date +%s.%N)
+
+          # Start container (this might fail for some add-ons without proper config)
+          timeout 60s docker run --rm ${{ matrix.addon }}:test echo "Container started" || true
+
+          end_time=$(date +%s.%N)
+          startup_time=$(echo "$end_time - $start_time" | bc)
+
+          echo "Startup test completed in ${startup_time}s"
+
+          # Warn if startup is very slow (>30s)
+          if (( $(echo "$startup_time > 30" | bc -l) )); then
+            echo "⚠️ Warning: Container startup is slow (${startup_time}s)"
+          else
+            echo "✅ Container startup time is reasonable (${startup_time}s)"
+          fi
+
+  documentation-check:
+    name: 📚 Documentation check
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+
+      - name: 📚 Check documentation completeness
+        run: |
+          issues=()
+
+          # Check main README
+          if [[ ! -f "README.md" ]]; then
+            issues+=("Missing main README.md")
+          else
+            # Check for required sections
+            if ! grep -q "## Installation" README.md; then
+              issues+=("Main README missing Installation section")
+            fi
+            if ! grep -q "## Add-ons" README.md; then
+              issues+=("Main README missing Add-ons section")
+            fi
+          fi
+
+          # Check each add-on documentation
+          for addon in */; do
+            if [[ -f "${addon}config.yaml" ]]; then
+              addon_name=$(basename "$addon")
+
+              if [[ ! -f "${addon}README.md" ]]; then
+                issues+=("Missing ${addon}README.md")
+              fi
+
+              if [[ ! -f "${addon}DOCS.md" ]]; then
+                issues+=("Missing ${addon}DOCS.md")
+              fi
+
+              # Check for configuration documentation
+              if [[ -f "${addon}DOCS.md" ]]; then
+                if ! grep -q -i "configuration" "${addon}DOCS.md"; then
+                  issues+=("${addon}DOCS.md missing configuration section")
+                fi
+              fi
+            fi
+          done
+
+          if [[ ${#issues[@]} -gt 0 ]]; then
+            echo "📚 Documentation issues found:"
+            printf '%s\n' "${issues[@]}"
+            exit 1
+          else
+            echo "✅ Documentation looks good!"
+          fi

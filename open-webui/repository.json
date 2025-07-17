@@ -1,0 +1,6 @@
+{
+    "name": "vilabs-prox Home Assistant Add-ons",
+    "url": "https://github.com/Viotic/hassio-addons",
+    "maintainer": "vilabs-prox <vilabs-prox@home.local>",
+    "description": "Custom Home Assistant add-ons for vilabs-prox smart home setup"
+}

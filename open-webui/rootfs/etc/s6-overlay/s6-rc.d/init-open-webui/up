@@ -1,0 +1,94 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Add-on: Open WebUI
+# Initializes Open WebUI configuration
+# ==============================================================================
+
+readonly CONFIG_PATH="/data/config"
+readonly ENV_FILE="/data/.env"
+
+bashio::log.info "Initializing Open WebUI configuration..."
+
+# Create data directory if it doesn't exist
+if ! bashio::fs.directory_exists "/data"; then
+    bashio::log.info "Creating data directory..."
+    mkdir -p /data
+fi
+
+# Create config directory if it doesn't exist
+if ! bashio::fs.directory_exists "${CONFIG_PATH}"; then
+    bashio::log.info "Creating config directory..."
+    mkdir -p "${CONFIG_PATH}"
+fi
+
+# Generate secret key if not provided
+if bashio::config.is_empty 'webui_secret_key'; then
+    bashio::log.info "Generating secret key..."
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+else
+    SECRET_KEY=$(bashio::config 'webui_secret_key')
+fi
+
+# Create environment file
+bashio::log.info "Creating environment configuration..."
+cat > "${ENV_FILE}" <<EOF
+# Open WebUI Configuration
+DATA_DIR=/data
+FRONTEND_BUILD_DIR=/app/build
+STATIC_DIR=/app/backend/static
+
+# Secret key for session management
+WEBUI_SECRET_KEY=${SECRET_KEY}
+
+# Ollama configuration
+OLLAMA_BASE_URL=$(bashio::config 'ollama_base_url')
+
+# Model configuration
+$(if ! bashio::config.is_empty 'default_models'; then
+    echo "DEFAULT_MODELS=$(bashio::config 'default_models')"
+fi)
+
+# Authentication settings
+ENABLE_SIGNUP=$(bashio::config 'enable_signup')
+ENABLE_LOGIN_FORM=$(bashio::config 'enable_login_form')
+
+# Web search configuration
+ENABLE_WEB_SEARCH=$(bashio::config 'enable_web_search')
+WEB_SEARCH_ENGINE=$(bashio::config 'web_search_engine')
+
+# Image generation configuration
+ENABLE_IMAGE_GENERATION=$(bashio::config 'enable_image_generation')
+$(if ! bashio::config.is_empty 'automatic_1111_base_url'; then
+    echo "AUTOMATIC1111_BASE_URL=$(bashio::config 'automatic_1111_base_url')"
+fi)
+$(if ! bashio::config.is_empty 'comfyui_base_url'; then
+    echo "COMFYUI_BASE_URL=$(bashio::config 'comfyui_base_url')"
+fi)
+
+# OpenAI API configuration
+$(if ! bashio::config.is_empty 'openai_api_base_url'; then
+    echo "OPENAI_API_BASE_URL=$(bashio::config 'openai_api_base_url')"
+fi)
+$(if ! bashio::config.is_empty 'openai_api_key'; then
+    echo "OPENAI_API_KEY=$(bashio::config 'openai_api_key')"
+fi)
+
+# Model filtering
+ENABLE_MODEL_FILTER=$(bashio::config 'enable_model_filter')
+$(if ! bashio::config.is_empty 'model_filter_list'; then
+    echo "MODEL_FILTER_LIST=$(bashio::config 'model_filter_list')"
+fi)
+
+# Network configuration
+HOST=0.0.0.0
+PORT=3000
+
+# Database
+DATABASE_URL=sqlite:///data/webui.db
+EOF
+
+# Set permissions
+chmod 600 "${ENV_FILE}"
+
+bashio::log.info "Open WebUI initialization completed!"
