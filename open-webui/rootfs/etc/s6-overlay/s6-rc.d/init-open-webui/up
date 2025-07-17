@@ -5,8 +5,8 @@
 # Initializes Open WebUI configuration
 # ==============================================================================
 
-readonly CONFIG_PATH="/data/config"
-readonly ENV_FILE="/data/.env"
+CONFIG_PATH="/data/config"
+ENV_FILE="/data/.env"
 
 bashio::log.info "Initializing Open WebUI configuration..."
 

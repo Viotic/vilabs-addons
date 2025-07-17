@@ -61,10 +61,17 @@ RUN pip3 install --no-cache-dir \
     async-timeout \
     cryptography
 
-# Try to install open-webui without opencv dependencies that are causing issues
-RUN pip3 install --no-cache-dir open-webui --no-deps || \
-    pip3 install --no-cache-dir "open-webui==0.5.20" --no-deps || \
-    pip3 install --no-cache-dir "open-webui==0.4.5"
+# Try to install open-webui - if --no-deps doesn't work, install with minimal deps
+RUN pip3 install --no-cache-dir open-webui --no-deps --force-reinstall || \
+    (echo "Retrying with minimal dependencies..." && \
+     pip3 install --no-cache-dir "open-webui==0.5.20") || \
+    (echo "Trying even older version..." && \
+     pip3 install --no-cache-dir "open-webui==0.4.5")
+
+# Verify open-webui command is available
+RUN which open-webui || (echo "open-webui command not found, checking installation..." && \
+    pip3 show open-webui && \
+    find /usr/local -name "open-webui*" -type f)
 
 # Install additional optional dependencies that might be needed
 RUN pip3 install --no-cache-dir \

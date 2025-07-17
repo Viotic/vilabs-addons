@@ -61,6 +61,27 @@ export ENABLE_LOGIN_FORM="$(bashio::config 'enable_login_form')"
 export OLLAMA_BASE_URL="$(bashio::config 'ollama_base_url')"
 
 # Start Open WebUI using the pip-installed command
-exec open-webui serve \
-    --host 0.0.0.0 \
-    --port 3000
+# Try different possible command formats for different versions
+if command -v open-webui >/dev/null 2>&1; then
+    bashio::log.info "Starting Open WebUI with 'open-webui serve' command..."
+    exec open-webui serve \
+        --host 0.0.0.0 \
+        --port 3000
+elif python3 -m open_webui --help >/dev/null 2>&1; then
+    bashio::log.info "Starting Open WebUI with 'python3 -m open_webui' command..."
+    exec python3 -m open_webui \
+        --host 0.0.0.0 \
+        --port 3000
+else
+    bashio::log.info "Starting Open WebUI with direct python execution..."
+    exec python3 -c "
+import sys
+try:
+    from open_webui.main import app
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=3000)
+except ImportError as e:
+    print(f'Failed to import open_webui: {e}', file=sys.stderr)
+    sys.exit(1)
+"
+fi
