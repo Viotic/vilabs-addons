@@ -28,7 +28,7 @@ WORKDIR /app
 # Create app directory structure
 RUN mkdir -p /app /data
 
-# Install Open WebUI via pip (simpler approach)
+# Install Open WebUI via pip (compatible with Python 3.12)
 RUN pip3 install --no-cache-dir open-webui
 
 # Build arguments (required for Home Assistant add-ons)
