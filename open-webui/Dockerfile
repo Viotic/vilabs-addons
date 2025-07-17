@@ -1,6 +1,5 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base-python:18.0.3
-# hadolint ignore=DL3006
-FROM ${BUILD_FROM}
+ARG BUILD_ARCH=amd64
+FROM ghcr.io/home-assistant/${BUILD_ARCH}-base-python:3.13-alpine3.21
 
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -10,41 +9,29 @@ COPY rootfs /
 
 # Install system dependencies
 RUN apk add --no-cache \
-    nodejs=20.15.1-r0 \
-    npm=10.8.0-r0 \
-    git=2.45.2-r0 \
-    gcc=13.2.1_git20240309-r0 \
-    g++=13.2.1_git20240309-r0 \
-    make=4.4.1-r2 \
-    python3-dev=3.12.7-r1 \
-    libffi-dev=3.4.6-r0 \
-    openssl-dev=3.3.2-r0 \
-    cargo=1.80.1-r0 \
-    rust=1.80.1-r0 \
-    curl=8.10.1-r0
+    nodejs \
+    npm \
+    git \
+    gcc \
+    g++ \
+    make \
+    python3-dev \
+    libffi-dev \
+    openssl-dev \
+    curl \
+    bash \
+    && pip3 install --no-cache-dir --upgrade pip
 
 # Set work directory
 WORKDIR /app
 
-# Clone Open WebUI
-RUN git clone https://github.com/open-webui/open-webui.git . \
-    && git checkout main
+# Create app directory structure
+RUN mkdir -p /app /data
 
-# Install Python dependencies
-RUN pip3 install --no-cache-dir -r backend/requirements.txt
+# Install Open WebUI via pip (simpler approach)
+RUN pip3 install --no-cache-dir open-webui
 
-# Install Node.js dependencies and build frontend
-WORKDIR /app
-RUN npm install \
-    && npm run build
-
-# Set working directory to backend
-WORKDIR /app/backend
-
-# Create data directory
-RUN mkdir -p /data
-
-# Build arguments
+# Build arguments (required for Home Assistant add-ons)
 ARG BUILD_ARCH
 ARG BUILD_DATE
 ARG BUILD_DESCRIPTION
@@ -75,12 +62,12 @@ LABEL \
 
 # Set environment variables
 ENV DATA_DIR=/data
-ENV FRONTEND_BUILD_DIR=/app/build
-ENV STATIC_DIR=/app/backend/static
+ENV PORT=3000
+ENV HOST=0.0.0.0
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
+# Health check - check if the service is responding
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000/ || exit 1
 
 # Expose port
 EXPOSE 3000
