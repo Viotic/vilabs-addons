@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Copy root filesystem
 COPY rootfs /
 
-# Install system dependencies
+# Install system dependencies including additional libs for opencv
 RUN apk add --no-cache \
     nodejs \
     npm \
@@ -23,7 +23,14 @@ RUN apk add --no-cache \
     cmake \
     pkgconfig \
     linux-headers \
-    && pip3 install --no-cache-dir --upgrade pip setuptools wheel
+    jpeg-dev \
+    zlib-dev \
+    libjpeg \
+    libpng-dev \
+    tiff-dev \
+    libwebp-dev \
+    openblas-dev \
+    && pip3 install --no-cache-dir --upgrade pip "setuptools>=70.1" wheel
 
 # Set work directory
 WORKDIR /app
@@ -32,9 +39,14 @@ WORKDIR /app
 RUN mkdir -p /app /data
 
 # Install Open WebUI via pip (compatible with Python 3.12)
-# Try installing with --only-binary to avoid compilation issues
-RUN pip3 install --no-cache-dir --only-binary=all open-webui || \
-    pip3 install --no-cache-dir --no-binary=opencv-python,opencv-python-headless open-webui
+# Strategy: Try different approaches in order of preference
+RUN pip3 install --no-cache-dir --only-binary=:all: open-webui || \
+    (echo "Trying with specific opencv version..." && \
+     pip3 install --no-cache-dir --only-binary=:all: "opencv-python-headless<4.9" && \
+     pip3 install --no-cache-dir --only-binary=:all: open-webui) || \
+    (echo "Upgrading setuptools and trying compilation..." && \
+     pip3 install --no-cache-dir --upgrade "setuptools>=70.1" wheel && \
+     pip3 install --no-cache-dir --no-binary=opencv-python,opencv-python-headless open-webui)
 
 # Build arguments (required for Home Assistant add-ons)
 ARG BUILD_ARCH
