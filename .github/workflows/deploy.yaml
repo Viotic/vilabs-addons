@@ -25,11 +25,17 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4
 
-      - name: 🚀 Run add-on information action
+      - name: � Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: 🚀 Get add-on information
         id: information
-        uses: frenck/action-addon-information@v1
-        with:
-          path: "./open-webui"
+        run: |
+          echo "architectures=[\"aarch64\",\"amd64\",\"armv7\"]" >> $GITHUB_OUTPUT
+          echo "name=Open WebUI" >> $GITHUB_OUTPUT
+          echo "slug=open-webui" >> $GITHUB_OUTPUT
 
       - name: ℹ️ Gather version and environment
         id: release

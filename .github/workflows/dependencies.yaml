@@ -18,9 +18,11 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4
 
-      - name: 🚀 Run add-on list action
+      - name: � Find add-ons
         id: addons
-        uses: home-assistant/actions/helpers/find-addons@master
+        run: |
+          # For now, we'll hardcode our known addons
+          echo "addons=[\"open-webui\"]" >> $GITHUB_OUTPUT
 
   update-base-images:
     name: 🔄 Update base images
@@ -36,7 +38,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🔄 Update base image versions
+      - name: � Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: �🔄 Update base image versions
         id: update
         run: |
           cd ${{ matrix.addon }}
@@ -129,7 +136,6 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: 🔄 Auto-merge Dependabot PRs
-        uses: pascalgn/merge-action@v0.15.6
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          merge_method: squash
+        run: |
+          echo "Dependabot PR detected. Manual review required for security."
+          echo "To enable auto-merge, configure repository settings."

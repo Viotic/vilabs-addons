@@ -22,13 +22,20 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🚀 Run add-on list action
+      - name: � Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: 🔍 Find add-ons
         id: addons
-        uses: home-assistant/actions/helpers/find-addons@master
+        run: |
+          echo "addons=open-webui" >> $GITHUB_OUTPUT
 
       - name: 📝 Update version shields
         run: |
-          for addon in ${{ steps.addons.outputs.addons }}; do
+          addons="open-webui"
+          for addon in $addons; do
             if [[ -f "${addon}/config.yaml" ]]; then
               version=$(yq eval '.version' "${addon}/config.yaml")
               addon_name=$(yq eval '.name' "${addon}/config.yaml")
@@ -59,7 +66,8 @@ jobs:
 
       - name: 📝 Update architecture support
         run: |
-          for addon in ${{ steps.addons.outputs.addons }}; do
+          addons="open-webui"
+          for addon in $addons; do
             if [[ -f "${addon}/config.yaml" ]]; then
               # Get supported architectures
               architectures=$(yq eval '.arch[]' "${addon}/config.yaml" | tr '\n' ' ')
@@ -79,7 +87,7 @@ jobs:
       - name: 📝 Update repository stats
         run: |
           # Add repository statistics
-          addon_count=${{ steps.addons.outputs.addons }} | jq '. | length'
+          addon_count=1
 
           # Update or add repository stats in README
           if ! grep -q "## Repository Statistics" README.md; then

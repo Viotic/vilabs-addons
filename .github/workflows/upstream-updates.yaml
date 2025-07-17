@@ -18,7 +18,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🔍 Get latest Open WebUI release
+      - name: � Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: �🔍 Get latest Open WebUI release
         id: upstream
         run: |
           # Get latest release from Open WebUI

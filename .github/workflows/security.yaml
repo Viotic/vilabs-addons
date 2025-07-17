@@ -23,31 +23,12 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4
 
-      - name: 🚀 Run add-on list action
-        id: addons
-        uses: home-assistant/actions/helpers/find-addons@master
-
-      - name: 🕵️ Find changed add-ons
+      - name: � Find add-ons
         id: changed_addons
         run: |
-          declare -a changed_addons
-          for addon in ${{ steps.addons.outputs.addons }}; do
-            if [[ "${{ github.event_name }}" == "push" ]] ||
-               [[ "${{ github.event_name }}" == "schedule" ]] ||
-               [[ "${{ github.event_name }}" == "workflow_dispatch" ]] ||
-               git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "^${addon}/"; then
-              changed_addons+=("\"${addon}\",")
-            fi
-          done
-
-          changed=$(echo ${changed_addons[@]} | rev | cut -c 2- | rev)
-
-          if [[ ${#changed_addons[@]} -gt 0 ]]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
-          echo "addons=[${changed}]" >> $GITHUB_OUTPUT
+          # For now, we'll hardcode our known addons
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "addons=[\"open-webui\"]" >> $GITHUB_OUTPUT
 
   snyk:
     name: 🔍 Snyk Security Scan
@@ -66,11 +47,13 @@ jobs:
         uses: snyk/actions/setup@master
 
       - name: 🔍 Snyk Code test
+        if: env.SNYK_TOKEN != ''
         run: snyk code test ${{ matrix.addon }}/ || true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: 🔍 Snyk Open Source monitor
+        if: env.SNYK_TOKEN != ''
         run: snyk monitor ${{ matrix.addon }}/ || true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -81,6 +64,7 @@ jobs:
           docker build -t ${{ matrix.addon }}:latest .
 
       - name: 🔍 Snyk Container monitor
+        if: env.SNYK_TOKEN != ''
         run: snyk container monitor ${{ matrix.addon }}:latest || true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

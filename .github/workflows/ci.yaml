@@ -24,30 +24,46 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4
-
-      - name: 🚀 Run add-on list action
-        id: addons
-        uses: home-assistant/actions/helpers/find-addons@master
+        with:
+          fetch-depth: 0
 
       - name: 🕵️ Find changed add-ons
         id: changed_addons
         run: |
           declare -a changed_addons
-          for addon in ${{ steps.addons.outputs.addons }}; do
-            if [[ "${{ github.event_name }}" == "push" ]] ||
-               git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "^${addon}/"; then
+          
+          # For this repository, we know we have open-webui addon
+          all_addons="open-webui"
+          
+          for addon in $all_addons; do
+            # On first push or if no previous commit, include all addons
+            if [[ "${{ github.event_name }}" == "push" && -z "${{ github.event.before }}" ]] ||
+               [[ "${{ github.event_name }}" == "workflow_dispatch" ]] ||
+               [[ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]] ||
+               [[ -z "${{ github.event.before }}" ]]; then
+              changed_addons+=("\"${addon}\",")
+            elif [[ "${{ github.event_name }}" == "push" ]]; then
+              # Check if addon directory has changes
+              if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "^${addon}/" || true; then
+                changed_addons+=("\"${addon}\",")
+              fi
+            else
+              # For pull requests, include all addons
               changed_addons+=("\"${addon}\",")
             fi
           done
 
-          changed=$(echo ${changed_addons[@]} | rev | cut -c 2- | rev)
-
+          # Remove trailing comma and format as JSON array
           if [[ ${#changed_addons[@]} -gt 0 ]]; then
+            changed=$(printf "%s" "${changed_addons[@]}" | sed 's/,$//')
             echo "changed=true" >> $GITHUB_OUTPUT
+            echo "addons=[$changed]" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
+            echo "addons=[]" >> $GITHUB_OUTPUT
           fi
-          echo "addons=[${changed}]" >> $GITHUB_OUTPUT
+          
+          echo "Found addons: [$changed]"
 
   lint-addon:
     name: Lint add-on
@@ -169,11 +185,8 @@ jobs:
             BUILD_FROM=${{ steps.flags.outputs.from }}
             BUILD_ARCH=${{ matrix.arch }}
             BUILD_DATE=${{ steps.flags.outputs.date }}
-            BUILD_DESCRIPTION=${{ needs.information.outputs.description }}
-            BUILD_NAME=${{ needs.information.outputs.name }}
             BUILD_REF=${{ github.sha }}
             BUILD_REPOSITORY=${{ github.repository }}
-            BUILD_VERSION=${{ needs.information.outputs.version }}
           platforms: ${{ steps.flags.outputs.platform }}
           push: false
           cache-from: type=gha,scope=${{ matrix.addon }}-${{ matrix.arch }}

@@ -32,11 +32,16 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4
 
-      - name: 🚀 Run add-on information action
+      - name: � Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: 🚀 Get add-on information
         id: information
-        uses: frenck/action-addon-information@v1
-        with:
-          path: "./${{ github.event.inputs.addon }}"
+        run: |
+          current_version=$(yq eval '.version' "${{ github.event.inputs.addon }}/config.yaml")
+          echo "version=$current_version" >> $GITHUB_OUTPUT
 
       - name: 📝 Calculate new version
         id: version
