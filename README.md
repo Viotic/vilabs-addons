@@ -13,7 +13,7 @@ Home Assistant add-on store, a possibility to add a repository is provided.
 Use the following URL to add this repository:
 
 ```txt
-https://github.com/your-username/hassio-addons
+https://github.com/Viotic/vilabs-addons
 ```
 
 ## Add-ons
@@ -86,7 +86,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 [forum]: https://community.home-assistant.io
-[issue]: https://github.com/your-username/hassio-addons/issues
+[issue]: https://github.com/Viotic/vilabs-addons/issues
 [reddit]: https://reddit.com/r/homeassistant
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg
 [project-stage-shield]: https://img.shields.io/badge/project%20stage-experimental-yellow.svg
