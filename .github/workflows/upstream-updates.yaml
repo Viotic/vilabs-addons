@@ -27,7 +27,9 @@ jobs:
         id: upstream
         run: |
           # Get latest release from Open WebUI
-          latest_release=$(curl -s "https://api.github.com/repos/open-webui/open-webui/releases/latest" | jq -r '.tag_name')
+          latest_release=$(curl -s \
+            "https://api.github.com/repos/open-webui/open-webui/releases/latest" | \
+            jq -r '.tag_name')
           latest_version=${latest_release#v}
 
           echo "Latest upstream version: $latest_version"
@@ -72,7 +74,8 @@ jobs:
 
           # Update version in any documentation
           if [[ -f "README.md" ]]; then
-            sed -i "s/version: [0-9]\+\.[0-9]\+\.[0-9]\+/version: ${{ steps.upstream.outputs.latest_version }}/g" README.md
+            sed -i "s/version: [0-9]\+\.[0-9]\+\.[0-9]\+/version: \
+              ${{ steps.upstream.outputs.latest_version }}/g" README.md
           fi
 
       - name: 🔄 Update Dockerfile if needed
@@ -83,7 +86,9 @@ jobs:
           # Check if Dockerfile needs to be updated to use specific version
           if grep -q "git clone.*open-webui" Dockerfile; then
             # Update git clone to use specific tag
-            sed -i "s|git clone https://github.com/open-webui/open-webui.git|git clone --branch ${{ steps.upstream.outputs.latest_release }} https://github.com/open-webui/open-webui.git|g" Dockerfile
+            sed -i "s|git clone https://github.com/open-webui/open-webui.git|git clone \
+              --branch ${{ steps.upstream.outputs.latest_release }} \
+              https://github.com/open-webui/open-webui.git|g" Dockerfile
           fi
 
       - name: 🚀 Create Pull Request
@@ -105,13 +110,15 @@ jobs:
 
             ### Upstream Changes
 
-            **Release:** [${{ steps.upstream.outputs.latest_release }}](https://github.com/open-webui/open-webui/releases/tag/${{ steps.upstream.outputs.latest_release }})
+            **Release:** [${{ steps.upstream.outputs.latest_release }}](
+              https://github.com/open-webui/open-webui/releases/tag/${{ steps.upstream.outputs.latest_release }})
 
             ${{ steps.release_notes.outputs.release_notes }}
 
             ### Changes in this PR
 
-            - Updated add-on version from `${{ steps.upstream.outputs.current_version }}` to `${{ steps.upstream.outputs.latest_version }}`
+            - Updated add-on version from `${{ steps.upstream.outputs.current_version }}`
+              to `${{ steps.upstream.outputs.latest_version }}`
             - Updated Dockerfile to use the latest release
             - Updated documentation (if applicable)
 
@@ -127,7 +134,8 @@ jobs:
 
             ## Notes
 
-            This is an automated update created by the upstream update workflow. Please review the upstream changes and test thoroughly before merging.
+            This is an automated update created by the upstream update workflow.
+            Please review the upstream changes and test thoroughly before merging.
           branch: update-open-webui-${{ steps.upstream.outputs.latest_version }}
           delete-branch: true
           labels: |

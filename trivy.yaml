@@ -1,0 +1,58 @@
+# Trivy configuration file
+# https://aquasecurity.github.io/trivy/latest/docs/configuration/config-file/
+
+format: sarif
+output: trivy-results.sarif
+
+# Vulnerability settings
+vulnerability:
+  type:
+    - os
+    - library
+
+# Security scanners to run
+scanners:
+  - vuln
+  - config
+  - secret
+
+# Severity levels to report
+severity:
+  - UNKNOWN
+  - LOW
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+
+# Skip files and directories
+skip-files:
+  - "**/*.md"
+  - "**/*.txt"
+  - ".git/**"
+  - ".github/**"
+  - "**/.venv/**"
+  - "**/venv/**"
+  - "**/__pycache__/**"
+  - "**/.pytest_cache/**"
+  - "**/node_modules/**"
+  - "**/test/**"
+  - "**/tests/**"
+
+# Skip directories
+skip-dirs:
+  - .git
+  - .github
+  - .venv
+  - venv
+  - __pycache__
+  - .pytest_cache
+  - node_modules
+  - test
+  - tests
+
+# Timeout settings
+timeout: 10m
+
+# Cache settings
+cache:
+  ttl: 24h

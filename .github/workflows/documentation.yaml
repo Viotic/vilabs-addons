@@ -46,8 +46,10 @@ jobs:
                 shield_pattern="\[${addon}-version-shield\]"
                 if ! grep -q "$shield_pattern" README.md; then
                   echo "<!-- Shields for ${addon} -->" >> shields_temp.md
-                  echo "[${addon}-version-shield]: https://img.shields.io/badge/version-v${version}-blue.svg" >> shields_temp.md
-                  echo "[${addon}-aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg" >> shields_temp.md
+                  echo "[${addon}-version-shield]: https://img.shields.io/badge/version-v${version}-blue.svg" \
+                    >> shields_temp.md
+                  echo "[${addon}-aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg" \
+                    >> shields_temp.md
                   echo "[${addon}-amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg" >> shields_temp.md
                   echo "[${addon}-armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg" >> shields_temp.md
                   echo "[${addon}-armhf-shield]: https://img.shields.io/badge/armhf-no-red.svg" >> shields_temp.md
@@ -58,7 +60,8 @@ jobs:
                   rm shields_temp.md
                 else
                   # Update existing shield
-                  sed -i "s|\[${addon}-version-shield\]:.*|\[${addon}-version-shield\]: https://img.shields.io/badge/version-v${version}-blue.svg|g" README.md
+                  sed -i "s|\[${addon}-version-shield\]:.*|\[${addon}-version-shield\]: \
+                    https://img.shields.io/badge/version-v${version}-blue.svg|g" README.md
                 fi
               fi
             fi
@@ -79,7 +82,8 @@ jobs:
                 else
                   status="no-red"
                 fi
-                sed -i "s|\[${addon}-${arch}-shield\]:.*|\[${addon}-${arch}-shield\]: https://img.shields.io/badge/${arch}-${status}.svg|g" README.md || true
+                sed -i "s|\[${addon}-${arch}-shield\]:.*|\[${addon}-${arch}-shield\]: \
+                  https://img.shields.io/badge/${arch}-${status}.svg|g" README.md || true
               done
             fi
           done

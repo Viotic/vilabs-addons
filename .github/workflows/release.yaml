@@ -93,9 +93,13 @@ jobs:
           last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
           if [[ -n "$last_tag" ]]; then
-            changelog=$(git log --pretty=format:"- %s" ${last_tag}..HEAD --grep="^feat\|^fix\|^perf\|^refactor" --grep="${{ github.event.inputs.addon }}")
+            changelog=$(git log --pretty=format:"- %s" ${last_tag}..HEAD \
+              --grep="^feat\|^fix\|^perf\|^refactor" \
+              --grep="${{ github.event.inputs.addon }}")
           else
-            changelog=$(git log --pretty=format:"- %s" --grep="^feat\|^fix\|^perf\|^refactor" --grep="${{ github.event.inputs.addon }}")
+            changelog=$(git log --pretty=format:"- %s" \
+              --grep="^feat\|^fix\|^perf\|^refactor" \
+              --grep="${{ github.event.inputs.addon }}")
           fi
 
           if [[ -z "$changelog" ]]; then
@@ -112,9 +116,12 @@ jobs:
           git config --local user.name "GitHub Action"
 
           git add "${{ github.event.inputs.addon }}/config.yaml"
-          git commit -m "🔖 Release ${{ github.event.inputs.addon }} v${{ needs.information.outputs.version }}"
+          git commit -m "🔖 Release ${{ github.event.inputs.addon }} \
+            v${{ needs.information.outputs.version }}"
 
-          git tag -a "v${{ needs.information.outputs.version }}" -m "Release ${{ github.event.inputs.addon }} v${{ needs.information.outputs.version }}"
+          git tag -a "v${{ needs.information.outputs.version }}" \
+            -m "Release ${{ github.event.inputs.addon }} \
+            v${{ needs.information.outputs.version }}"
           git push origin main
           git push origin "v${{ needs.information.outputs.version }}"
 
@@ -142,7 +149,8 @@ jobs:
 
             ## Configuration
 
-            For detailed configuration instructions, see the [add-on documentation](./${{ github.event.inputs.addon }}/DOCS.md).
+            For detailed configuration instructions, see the
+            [add-on documentation](./${{ github.event.inputs.addon }}/DOCS.md).
           draft: false
           prerelease: false
 
