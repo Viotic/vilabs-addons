@@ -31,10 +31,10 @@ jobs:
         id: changed_addons
         run: |
           declare -a changed_addons
-          
+
           # For this repository, we know we have open-webui addon
           all_addons="open-webui"
-          
+
           for addon in $all_addons; do
             # On first push or if no previous commit, include all addons
             if [[ "${{ github.event_name }}" == "push" && -z "${{ github.event.before }}" ]] ||
@@ -62,7 +62,7 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "addons=[]" >> $GITHUB_OUTPUT
           fi
-          
+
           echo "Found addons: [$changed]"
 
   lint-addon:

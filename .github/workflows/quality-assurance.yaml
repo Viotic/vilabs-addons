@@ -176,7 +176,7 @@ jobs:
       - name: ⚡ Test basic functionality
         run: |
           cd ${{ matrix.addon }}
-          
+
           # Just test that basic files exist and are valid
           if [[ -f "Dockerfile" ]]; then
             echo "✅ Dockerfile exists"
@@ -184,14 +184,14 @@ jobs:
             echo "❌ Dockerfile missing"
             exit 1
           fi
-          
+
           if [[ -f "config.yaml" ]]; then
             echo "✅ config.yaml exists"
           else
             echo "❌ config.yaml missing"
             exit 1
           fi
-          
+
           echo "✅ Basic validation passed"
 
   documentation-check:
