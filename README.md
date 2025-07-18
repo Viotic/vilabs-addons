@@ -1,4 +1,4 @@
-# vilabs-prox Home Assistant Add-ons
+# vilabs-addons Home Assistant Add-ons (WORK IN PROGRESS!!!)
 
 ![Project Stage][project-stage-shield]
 ![Maintenance][maintenance-shield]
