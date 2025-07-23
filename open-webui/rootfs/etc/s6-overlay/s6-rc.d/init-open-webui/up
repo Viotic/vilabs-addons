@@ -1,38 +1,37 @@
-#!/command/with-contenv bashio
-# shellcheck shell=bash
+#!/bin/bash
 # ==============================================================================
 # Home Assistant Add-on: Open WebUI
 # Initializes Open WebUI configuration
 # ==============================================================================
 
-CONFIG_PATH="/data/config"
-ENV_FILE="/data/.env"
+echo "[INFO] Initializing Open WebUI configuration..."
 
-bashio::log.info "Initializing Open WebUI configuration..."
-
-# Create data directory if it doesn't exist
-if ! bashio::fs.directory_exists "/data"; then
-    bashio::log.info "Creating data directory..."
+# Create data directory with proper permissions
+if [[ ! -d "/data" ]]; then
+    echo "[INFO] Creating data directory..."
     mkdir -p /data
+    chown -R root:root /data
+    chmod 755 /data
 fi
 
 # Create config directory if it doesn't exist
-if ! bashio::fs.directory_exists "${CONFIG_PATH}"; then
-    bashio::log.info "Creating config directory..."
+CONFIG_PATH="/data/config"
+if [[ ! -d "${CONFIG_PATH}" ]]; then
+    echo "[INFO] Creating config directory..."
     mkdir -p "${CONFIG_PATH}"
 fi
 
-# Generate secret key if not provided
-if bashio::config.is_empty 'webui_secret_key'; then
-    bashio::log.info "Generating secret key..."
-    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
-else
-    SECRET_KEY=$(bashio::config 'webui_secret_key')
-fi
+# Generate secret key
+echo "[INFO] Generating secret key..."
+SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+
+# Set default values
+OLLAMA_URL="${OLLAMA_BASE_URL:-http://supervisor:11434}"
 
 # Create environment file
-bashio::log.info "Creating environment configuration..."
-cat > "${ENV_FILE}" <<EOF
+ENV_FILE="/data/.env"
+echo "[INFO] Creating environment configuration..."
+cat > "${ENV_FILE}" <<ENVEOF
 # Open WebUI Configuration
 DATA_DIR=/data
 FRONTEND_BUILD_DIR=/app/build
@@ -42,43 +41,18 @@ STATIC_DIR=/app/backend/static
 WEBUI_SECRET_KEY=${SECRET_KEY}
 
 # Ollama configuration
-OLLAMA_BASE_URL=$(bashio::config 'ollama_base_url')
-
-# Model configuration
-$(if ! bashio::config.is_empty 'default_models'; then
-    echo "DEFAULT_MODELS=$(bashio::config 'default_models')"
-fi)
+OLLAMA_BASE_URL=${OLLAMA_URL}
 
 # Authentication settings
-ENABLE_SIGNUP=$(bashio::config 'enable_signup')
-ENABLE_LOGIN_FORM=$(bashio::config 'enable_login_form')
+ENABLE_SIGNUP=true
+ENABLE_LOGIN_FORM=true
 
 # Web search configuration
-ENABLE_WEB_SEARCH=$(bashio::config 'enable_web_search')
-WEB_SEARCH_ENGINE=$(bashio::config 'web_search_engine')
+ENABLE_WEB_SEARCH=false
+WEB_SEARCH_ENGINE=searx
 
 # Image generation configuration
-ENABLE_IMAGE_GENERATION=$(bashio::config 'enable_image_generation')
-$(if ! bashio::config.is_empty 'automatic_1111_base_url'; then
-    echo "AUTOMATIC1111_BASE_URL=$(bashio::config 'automatic_1111_base_url')"
-fi)
-$(if ! bashio::config.is_empty 'comfyui_base_url'; then
-    echo "COMFYUI_BASE_URL=$(bashio::config 'comfyui_base_url')"
-fi)
-
-# OpenAI API configuration
-$(if ! bashio::config.is_empty 'openai_api_base_url'; then
-    echo "OPENAI_API_BASE_URL=$(bashio::config 'openai_api_base_url')"
-fi)
-$(if ! bashio::config.is_empty 'openai_api_key'; then
-    echo "OPENAI_API_KEY=$(bashio::config 'openai_api_key')"
-fi)
-
-# Model filtering
-ENABLE_MODEL_FILTER=$(bashio::config 'enable_model_filter')
-$(if ! bashio::config.is_empty 'model_filter_list'; then
-    echo "MODEL_FILTER_LIST=$(bashio::config 'model_filter_list')"
-fi)
+ENABLE_IMAGE_GENERATION=false
 
 # Network configuration
 HOST=0.0.0.0
@@ -86,9 +60,26 @@ PORT=3000
 
 # Database
 DATABASE_URL=sqlite:///data/webui.db
-EOF
+
+# Model filtering
+ENABLE_MODEL_FILTER=false
+MODEL_FILTER_LIST=
+
+# Default models
+DEFAULT_MODELS=
+ENVEOF
 
 # Set permissions
 chmod 600 "${ENV_FILE}"
 
-bashio::log.info "Open WebUI initialization completed!"
+# Initialize database directory
+mkdir -p /data/db
+chmod 755 /data/db
+
+# Create logs directory
+mkdir -p /data/logs
+chmod 755 /data/logs
+
+echo "[INFO] Open WebUI initialization completed!"
+echo "[INFO] Secret key: ${SECRET_KEY:0:8}... (truncated for security)"
+echo "[INFO] Ollama URL: ${OLLAMA_URL}"

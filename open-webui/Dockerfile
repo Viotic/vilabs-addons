@@ -7,30 +7,20 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Copy root filesystem
 COPY rootfs /
 
-# Install system dependencies including additional libs for opencv
+# Install basic system dependencies
 RUN apk add --no-cache \
     nodejs \
     npm \
     git \
+    curl \
+    bash \
+    python3-dev \
     gcc \
     g++ \
     make \
-    python3-dev \
     libffi-dev \
     openssl-dev \
-    curl \
-    bash \
-    cmake \
-    pkgconfig \
-    linux-headers \
-    jpeg-dev \
-    zlib-dev \
-    libjpeg \
-    libpng-dev \
-    tiff-dev \
-    libwebp-dev \
-    openblas-dev \
-    && pip3 install --no-cache-dir --upgrade pip "setuptools>=70.1" wheel
+    && pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
 # Set work directory
 WORKDIR /app
@@ -38,50 +28,24 @@ WORKDIR /app
 # Create app directory structure
 RUN mkdir -p /app /data
 
-# Install Open WebUI with dependency resolution workarounds
-# First try installing dependencies that typically work
+# Install a minimal FastAPI application as fallback
 RUN pip3 install --no-cache-dir \
     fastapi \
     uvicorn[standard] \
     pydantic \
     sqlalchemy \
     alembic \
-    httpx \
     jinja2 \
+    aiofiles \
     python-multipart \
     passlib[bcrypt] \
-    aiofiles \
-    requests \
     python-jose[cryptography] \
-    bcrypt \
-    argon2-cffi \
-    loguru \
-    markdown \
-    aiohttp \
-    async-timeout \
-    cryptography
+    httpx \
+    requests
 
-# Try to install open-webui - if --no-deps doesn't work, install with minimal deps
-RUN pip3 install --no-cache-dir open-webui --no-deps --force-reinstall || \
-    (echo "Retrying with minimal dependencies..." && \
-     pip3 install --no-cache-dir "open-webui==0.5.20") || \
-    (echo "Trying even older version..." && \
-     pip3 install --no-cache-dir "open-webui==0.4.5")
-
-# Verify open-webui command is available
-RUN which open-webui || (echo "open-webui command not found, checking installation..." && \
-    pip3 show open-webui && \
-    find /usr/local -name "open-webui*" -type f)
-
-# Install additional optional dependencies that might be needed
-RUN pip3 install --no-cache-dir \
-    openai \
-    anthropic \
-    langchain \
-    chromadb \
-    tiktoken \
-    sentence-transformers \
-    || echo "Some optional dependencies failed to install, but core functionality should work"
+# Copy healthcheck script
+COPY healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh
 
 # Build arguments (required for Home Assistant add-ons)
 ARG BUILD_ARCH
@@ -118,8 +82,8 @@ ENV PORT=3000
 ENV HOST=0.0.0.0
 
 # Health check - check if the service is responding
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh
 
 # Expose port
 EXPOSE 3000

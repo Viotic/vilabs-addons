@@ -10,7 +10,8 @@ arch:
   - aarch64
   - amd64
   - armv7
-startup: services
+startup: application
+boot: auto
 webui: "http://[HOST]:[PORT:3000]"
 ports:
   3000/tcp: 3000
@@ -64,18 +65,4 @@ host_network: false
 privileged: []
 full_access: false
 homeassistant_api: false
-environment:
-  OLLAMA_BASE_URL: "ollama_base_url"
-  WEBUI_SECRET_KEY: "webui_secret_key"
-  DEFAULT_MODELS: "default_models"
-  ENABLE_SIGNUP: "enable_signup"
-  ENABLE_LOGIN_FORM: "enable_login_form"
-  ENABLE_WEB_SEARCH: "enable_web_search"
-  WEB_SEARCH_ENGINE: "web_search_engine"
-  ENABLE_IMAGE_GENERATION: "enable_image_generation"
-  AUTOMATIC1111_BASE_URL: "automatic_1111_base_url"
-  COMFYUI_BASE_URL: "comfyui_base_url"
-  OPENAI_API_BASE_URL: "openai_api_base_url"
-  OPENAI_API_KEY: "openai_api_key"
-  ENABLE_MODEL_FILTER: "enable_model_filter"
-  MODEL_FILTER_LIST: "model_filter_list"
+# Note: Environment variables are handled in the service scripts for proper configuration
