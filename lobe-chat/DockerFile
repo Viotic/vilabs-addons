@@ -1,23 +1,21 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Install system dependencies
+# Install Node.js 18+ (required for Lobe Chat)
 RUN apk add --no-cache \
     nodejs \
     npm \
-    git \
-    gcc \
-    g++ \
-    make \
-    python3-dev \
-    libffi-dev \
-    openssl-dev \
     curl \
     bash \
-    && pip3 install --no-cache-dir --upgrade pip setuptools wheel
+    git
 
-# Install Open WebUI
-RUN pip3 install --no-cache-dir open-webui
+# Set working directory
+WORKDIR /app
+
+# Clone and build Lobe Chat
+RUN git clone --depth 1 https://github.com/lobehub/lobe-chat.git . && \
+    npm ci && \
+    npm run build:docker
 
 # Build arguments
 ARG BUILD_ARCH
@@ -52,12 +50,12 @@ RUN chmod a+x /run.sh
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+    CMD curl -f http://localhost:3210/ || exit 1
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3210
 
-# Set data directory
+# Set data directory for persistence
 VOLUME ["/data"]
 
 # Run the service

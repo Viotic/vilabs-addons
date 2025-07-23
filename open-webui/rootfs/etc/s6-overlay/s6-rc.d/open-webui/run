@@ -1,155 +1,65 @@
-#!/bin/bash
-# ==============================================================================
-# Home Assistant Add-on: Open WebUI (Simplified)
-# Runs a placeholder service while Open WebUI is being properly implemented
-# ==============================================================================
+#!/usr/bin/with-contenv bashio
 
-echo "[INFO] Starting Open WebUI placeholder service..."
+set -e
 
-# Validate data directory exists
-if [[ ! -d "/data" ]]; then
-    echo "[ERROR] Data directory /data does not exist!"
-    exit 1
-fi
+bashio::log.info "Starting Open WebUI..."
 
-# Set data directory
-cd /data || exit 1
+# Create data directory
+mkdir -p /data
 
-# Load environment variables
-if [[ -f "/data/.env" ]]; then
-    echo "[INFO] Loading environment configuration..."
-    # shellcheck disable=SC1091
-    source /data/.env
+# Generate secret key if not provided
+if bashio::config.is_empty 'webui_secret_key'; then
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
 else
-    echo "[WARNING] Environment file not found, using defaults"
+    SECRET_KEY=$(bashio::config 'webui_secret_key')
 fi
 
-# Set required environment variables
+# Set environment variables
 export DATA_DIR="/data"
-export PORT=3000
-export HOST="0.0.0.0"
+export WEBUI_SECRET_KEY="${SECRET_KEY}"
+export ENABLE_SIGNUP="$(bashio::config 'enable_signup')"
+export ENABLE_LOGIN_FORM="$(bashio::config 'enable_login_form')"
+export OLLAMA_BASE_URL="$(bashio::config 'ollama_base_url')"
+export WEBUI_AUTH_TRUSTED_EMAIL_HEADER=""
+export WEBUI_AUTH_TRUSTED_NAME_HEADER=""
 
-# Log configuration
-echo "[INFO] Open WebUI Configuration:"
-echo "[INFO] - Data Directory: ${DATA_DIR}"
-echo "[INFO] - Host: ${HOST}"
-echo "[INFO] - Port: ${PORT}"
-echo "[INFO] - Ollama URL: ${OLLAMA_BASE_URL:-http://supervisor:11434}"
+# Optional configurations
+if ! bashio::config.is_empty 'default_models'; then
+    export DEFAULT_MODELS="$(bashio::config 'default_models')"
+fi
 
-# Start placeholder FastAPI server
-echo "[INFO] Starting placeholder web interface on port 3000..."
-echo "[WARNING] This is a placeholder implementation. Full Open WebUI functionality is in development."
+if bashio::config.true 'enable_web_search'; then
+    export ENABLE_WEB_SEARCH=true
+    export WEB_SEARCH_ENGINE="$(bashio::config 'web_search_engine')"
+fi
 
-exec python3 -c "
-import uvicorn
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-import os
-import json
-from datetime import datetime
+if bashio::config.true 'enable_image_generation'; then
+    export ENABLE_IMAGE_GENERATION=true
+    if ! bashio::config.is_empty 'automatic_1111_base_url'; then
+        export AUTOMATIC1111_BASE_URL="$(bashio::config 'automatic_1111_base_url')"
+    fi
+    if ! bashio::config.is_empty 'comfyui_base_url'; then
+        export COMFYUI_BASE_URL="$(bashio::config 'comfyui_base_url')"
+    fi
+fi
 
-app = FastAPI(title='Open WebUI Placeholder', description='Placeholder for Open WebUI addon')
+if ! bashio::config.is_empty 'openai_api_base_url'; then
+    export OPENAI_API_BASE_URL="$(bashio::config 'openai_api_base_url')"
+fi
 
-# Configuration from environment
-config = {
-    'ollama_base_url': os.getenv('OLLAMA_BASE_URL', 'http://supervisor:11434'),
-    'enable_signup': os.getenv('ENABLE_SIGNUP', 'true').lower() == 'true',
-    'enable_login_form': os.getenv('ENABLE_LOGIN_FORM', 'true').lower() == 'true',
-    'data_dir': os.getenv('DATA_DIR', '/data'),
-    'status': 'Placeholder - In Development'
-}
+if ! bashio::config.is_empty 'openai_api_key'; then
+    export OPENAI_API_KEY="$(bashio::config 'openai_api_key')"
+fi
 
-@app.get('/', response_class=HTMLResponse)
-def root():
-    return '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Open WebUI - Home Assistant Addon</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-            .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            .header { text-align: center; margin-bottom: 40px; }
-            .status { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
-            .config { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
-            .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
-            pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
-        </style>
-    </head>
-    <body>
-        <div class=\"container\">
-            <div class=\"header\">
-                <h1>🤖 Open WebUI</h1>
-                <h2>Home Assistant Add-on (Development Version)</h2>
-            </div>
+if bashio::config.true 'enable_model_filter'; then
+    export ENABLE_MODEL_FILTER=true
+    if ! bashio::config.is_empty 'model_filter_list'; then
+        export MODEL_FILTER_LIST="$(bashio::config 'model_filter_list')"
+    fi
+fi
 
-            <div class=\"status\">
-                <h3>⚠️ Development Status</h3>
-                <p>This is a placeholder service while the full Open WebUI implementation is being developed.</p>
-                <p>The addon is functional but Open WebUI features are not yet available.</p>
-            </div>
+bashio::log.info "Starting Open WebUI server on port 3000..."
 
-            <div class=\"config\">
-                <h3>📋 Current Configuration</h3>
-                <ul>
-                    <li><strong>Ollama URL:</strong> ''' + config['ollama_base_url'] + '''</li>
-                    <li><strong>Data Directory:</strong> ''' + config['data_dir'] + '''</li>
-                    <li><strong>Signup Enabled:</strong> ''' + str(config['enable_signup']) + '''</li>
-                    <li><strong>Login Form:</strong> ''' + str(config['enable_login_form']) + '''</li>
-                    <li><strong>Status:</strong> ''' + config['status'] + '''</li>
-                </ul>
-            </div>
-
-            <h3>🔧 Next Steps</h3>
-            <ol>
-                <li>The addon framework is working correctly</li>
-                <li>Open WebUI installation needs optimization for Alpine Linux</li>
-                <li>Complex dependencies (OpenCV, etc.) need alternative approaches</li>
-                <li>Configuration system is ready for full implementation</li>
-            </ol>
-
-            <h3>🚀 Roadmap</h3>
-            <ul>
-                <li>✅ Basic addon structure and configuration</li>
-                <li>✅ FastAPI web server foundation</li>
-                <li>✅ Environment configuration system</li>
-                <li>🔄 Open WebUI package installation optimization</li>
-                <li>⏳ Full Open WebUI functionality</li>
-                <li>⏳ AI model integrations</li>
-            </ul>
-
-            <div style=\"text-align: center; margin-top: 30px;\">
-                <a href=\"/api/status\" class=\"btn\">View API Status</a>
-                <a href=\"/api/config\" class=\"btn\">View Configuration</a>
-            </div>
-        </div>
-    </body>
-    </html>
-    '''
-
-@app.get('/api/status')
-def api_status():
-    return {
-        'status': 'placeholder',
-        'message': 'Open WebUI addon is in development',
-        'timestamp': datetime.now().isoformat(),
-        'version': '1.0.0-dev',
-        'components': {
-            'web_server': 'running',
-            'open_webui': 'not_installed',
-            'database': 'sqlite_ready',
-            'configuration': 'loaded'
-        }
-    }
-
-@app.get('/api/config')
-def api_config():
-    return config
-
-@app.get('/health')
-def health():
-    return {'status': 'ok', 'service': 'placeholder'}
-
-if __name__ == '__main__':
-    uvicorn.run(app, host='${HOST}', port=${PORT}, log_level='info')
-"
+# Start Open WebUI
+cd /data
+exec open-webui serve --host 0.0.0.0 --port 3000

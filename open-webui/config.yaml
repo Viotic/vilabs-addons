@@ -1,6 +1,6 @@
 ---
 name: Open WebUI
-version: 1.0.0
+version: 1.0.1
 slug: open-webui
 description: Open WebUI for Local AI Models - Chat interface for Ollama and other LLMs
 url: https://github.com/open-webui/open-webui
@@ -10,17 +10,13 @@ arch:
   - aarch64
   - amd64
   - armv7
-startup: application
-boot: auto
-webui: "http://[HOST]:[PORT:3000]"
+startup: services
 ports:
   3000/tcp: 3000
 ports_description:
   3000/tcp: Open WebUI web interface
 map:
   - data:rw
-  - config:rw
-  - ssl:ro
 options:
   log_level: info
   ollama_base_url: "http://supervisor:11434"
@@ -61,8 +57,3 @@ panel_title: Open WebUI
 panel_admin: true
 hassio_api: true
 hassio_role: manager
-host_network: false
-privileged: []
-full_access: false
-homeassistant_api: false
-# Note: Environment variables are handled in the service scripts for proper configuration

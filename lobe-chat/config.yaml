@@ -1,0 +1,61 @@
+---
+name: Lobe Chat
+version: 1.0.0
+slug: lobe-chat
+description: Modern AI Chat Framework with MCP Server Support
+url: https://github.com/lobehub/lobe-chat
+codenotary: vilabs-prox@home.local
+init: false
+arch:
+- aarch64
+- amd64
+- armv7
+startup: services
+ports:
+3210/tcp: 3210
+ports_description:
+3210/tcp: Lobe Chat web interface
+map:
+- data:rw
+options:
+log_level: info
+access_code: ""
+openai_api_key: ""
+openai_api_base_url: ""
+openai_proxy_url: ""
+anthropic_api_key: ""
+google_api_key: ""
+openai_model_list: ""
+enable_oauth_sso: false
+next_auth_secret: ""
+auth_providers: "none"
+enable_tts: true
+enable_stt: true
+enable_image_generation: false
+enable_artifacts: true
+mcp_servers_config: ""
+schema:
+log_level: list(trace|debug|info|notice|warning|error|fatal)
+access_code: str?
+openai_api_key: str?
+openai_api_base_url: str?
+openai_proxy_url: str?
+anthropic_api_key: str?
+google_api_key: str?
+openai_model_list: str?
+enable_oauth_sso: bool
+next_auth_secret: str?
+auth_providers: list(none|auth0|github|google|azure|authentik)?
+enable_tts: bool
+enable_stt: bool
+enable_image_generation: bool
+enable_artifacts: bool
+mcp_servers_config: str?
+ingress: true
+ingress_port: 3210
+ingress_entry: "/"
+panel_icon: mdi:chat
+panel_title: Lobe Chat
+panel_admin: true
+hassio_api: true
+hassio_role: manager
