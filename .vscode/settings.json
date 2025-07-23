@@ -1,0 +1,51 @@
+{
+    // .vscode/settings.json
+    "github.copilot.enable": {
+        "*": true,
+        "yaml": true,
+        "dockerfile": true,
+        "shellscript": true,
+        "markdown": true
+    },
+    // Enhanced context for HA add-ons
+    "github.copilot.advanced": {
+        "length": 500,
+        "temperature": 0.1,
+        "top_p": 1,
+        "inlineSuggestCount": 3
+    },
+    // File associations for better context
+    "files.associations": {
+        "**/config.yaml": "home-assistant-addon-config",
+        "**/build.yaml": "home-assistant-build",
+        "run.sh": "shellscript",
+        "Dockerfile*": "dockerfile"
+    },
+    // YAML schemas for validation and IntelliSense
+    "yaml.schemas": {
+        "https://developers.home-assistant.io/schemas/addon/config.json": [
+            "*/config.yaml",
+            "**/config.yaml"
+        ],
+        "https://developers.home-assistant.io/schemas/addon/build.json": [
+            "*/build.yaml",
+            "**/build.yaml"
+        ]
+    },
+    // Copilot suggestions priority
+    "editor.inlineSuggest.enabled": true,
+    "editor.suggest.showInlineDetails": true,
+    "github.copilot.editor.enableAutoCompletions": true,
+    // Language-specific settings
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml",
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    },
+    "[dockerfile]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
+    "[shellscript]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    }
+}
