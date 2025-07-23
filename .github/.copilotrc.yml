@@ -1,0 +1,53 @@
+# .copilotrc.yml - Project-specific Copilot configuration
+project_type: "home-assistant-addons"
+description: "Home Assistant add-on repository with OpenWebUI and Lobe Chat"
+
+context:
+  frameworks:
+    - "Home Assistant Add-on API"
+    - "Docker containerization"
+    - "Bashio library"
+    - "S6 overlay (when needed)"
+
+  patterns:
+    config_schema: "config.yaml with options/schema validation"
+    dockerfile: "Multi-arch builds with ARG BUILD_FROM"
+    run_script: "#!/usr/bin/with-contenv bashio startup pattern"
+    ingress: "Home Assistant ingress integration"
+
+  common_tasks:
+    - "Create config.yaml with ingress support"
+    - "Write Dockerfile with proper labels"
+    - "Handle configuration with bashio"
+    - "Set up environment variables"
+    - "Implement health checks"
+    - "Configure multi-architecture builds"
+
+examples:
+  config_template: |
+    name: "Service Name"
+    version: "1.0.0"
+    slug: service-slug
+    ingress: true
+    ports:
+      3000/tcp: 3000
+    schema:
+      api_key: str?
+
+  dockerfile_template: |
+    ARG BUILD_FROM
+    FROM ${BUILD_FROM}
+    RUN apk add --no-cache package
+    COPY run.sh /
+    CMD ["/run.sh"]
+
+  run_script_template: |
+    #!/usr/bin/with-contenv bashio
+    CONFIG=$(bashio::config 'key')
+    exec service --port 3000
+
+file_patterns:
+  - "*/config.yaml: Home Assistant add-on configuration"
+  - "*/build.yaml: Multi-architecture build settings"
+  - "*/run.sh: Add-on startup script with bashio"
+  - "*/Dockerfile: Container definition for HA add-on"

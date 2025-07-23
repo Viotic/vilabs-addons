@@ -1,0 +1,102 @@
+{
+    // .vscode/workspace.code-workspace
+    "folders": [
+        {
+            "name": "vilabs-addons",
+            "path": "."
+        }
+    ],
+    "settings": {
+        // Include previous settings.json content
+        // Additional Copilot enhancements
+        "github.copilot.chat.localeOverride": "en",
+        "github.copilot.chat.welcomeMessage": "never",
+        "github.copilot.renameSuggestions.triggerAutomatically": true,
+        // File explorer settings for HA development
+        "explorer.fileNesting.enabled": true,
+        "explorer.fileNesting.patterns": {
+            "config.yaml": "build.yaml, DOCS.md, README.md, CHANGELOG.md, translations/*, icon.png",
+            "Dockerfile": "run.sh, .dockerignore",
+            "docker-compose.yml": "docker-compose.*.yml, .env*"
+        },
+        // Terminal integration
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+            "ha-dev": {
+                "path": "/bin/bash",
+                "args": [
+                    "-c",
+                    "cd ${workspaceFolder} && exec bash --init-file <(echo 'alias ha-build=\"docker build -t test .\"; alias ha-test=\"docker run --rm -p 3000:3000 test\"')"
+                ]
+            }
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "github.copilot",
+            "github.copilot-chat",
+            "redhat.vscode-yaml",
+            "ms-azuretools.vscode-docker",
+            "foxundermoon.shell-format",
+            "timonwong.shellcheck",
+            "bradlc.vscode-tailwindcss"
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Build Add-on",
+                "type": "shell",
+                "command": "docker",
+                "args": [
+                    "build",
+                    "-t",
+                    "${input:addonName}:test",
+                    "${input:addonPath}"
+                ],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always"
+                }
+            },
+            {
+                "label": "Test Add-on",
+                "type": "shell",
+                "command": "docker",
+                "args": [
+                    "run",
+                    "--rm",
+                    "-p",
+                    "3000:3000",
+                    "${input:addonName}:test"
+                ],
+                "group": "test",
+                "dependsOn": "Build Add-on"
+            }
+        ],
+        "inputs": [
+            {
+                "id": "addonName",
+                "description": "Add-on name",
+                "default": "open-webui",
+                "type": "pickString",
+                "options": [
+                    "open-webui",
+                    "lobe-chat"
+                ]
+            },
+            {
+                "id": "addonPath",
+                "description": "Add-on directory",
+                "default": "./open-webui",
+                "type": "pickString",
+                "options": [
+                    "./open-webui",
+                    "./lobe-chat"
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,103 @@
+{
+  // .vscode/ha-addon.code-snippets
+  "HA Addon Config": {
+    "prefix": "ha-config",
+    "body": [
+      "---",
+      "name: ${1:Add-on Name}",
+      "version: ${2:1.0.0}",
+      "slug: ${3:addon-slug}",
+      "description: ${4:Description}",
+      "url: ${5:https://github.com/repo}",
+      "arch: [aarch64, amd64, armv7]",
+      "init: false",
+      "startup: services",
+      "ports:",
+      "  ${6:3000}/tcp: ${6:3000}",
+      "map:",
+      "  - data:rw",
+      "options:",
+      "  ${7:option_key}: ${8:default_value}",
+      "schema:",
+      "  ${7:option_key}: ${9:str}",
+      "ingress: true",
+      "ingress_port: ${6:3000}",
+      "panel_icon: mdi:${10:icon-name}",
+      "panel_title: ${1:Add-on Name}"
+    ],
+    "description": "Home Assistant add-on config.yaml template"
+  },
+
+  "HA Dockerfile": {
+    "prefix": "ha-dockerfile",
+    "body": [
+      "ARG BUILD_FROM",
+      "FROM \\${BUILD_FROM}",
+      "",
+      "RUN apk add --no-cache \\\\",
+      "    ${1:package1} \\\\",
+      "    ${2:package2}",
+      "",
+      "ARG BUILD_ARCH BUILD_DATE BUILD_DESCRIPTION BUILD_NAME BUILD_REF BUILD_REPOSITORY BUILD_VERSION",
+      "",
+      "LABEL \\\\",
+      "    io.hass.name=\"\\${BUILD_NAME}\" \\\\",
+      "    io.hass.type=\"addon\" \\\\",
+      "    io.hass.arch=\"\\${BUILD_ARCH}\"",
+      "",
+      "COPY run.sh /",
+      "RUN chmod a+x /run.sh",
+      "",
+      "HEALTHCHECK CMD curl -f http://localhost:${3:3000}/ || exit 1",
+      "EXPOSE ${3:3000}",
+      "CMD [\"/run.sh\"]"
+    ],
+    "description": "Home Assistant add-on Dockerfile template"
+  },
+
+  "HA Run Script": {
+    "prefix": "ha-run",
+    "body": [
+      "#!/usr/bin/with-contenv bashio",
+      "",
+      "set -e",
+      "",
+      "bashio::log.info \"Starting ${1:service}...\"",
+      "",
+      "mkdir -p /data",
+      "",
+      "# Configuration",
+      "${2:CONFIG_VAR}=$(bashio::config '${3:config_key}')",
+      "",
+      "# Environment variables",
+      "export ${4:SERVICE_VAR}=\"\\$${2:CONFIG_VAR}\"",
+      "",
+      "bashio::log.info \"Starting ${1:service} on port ${5:3000}...\"",
+      "",
+      "cd /data",
+      "exec ${6:service-command} --port ${5:3000} --host 0.0.0.0"
+    ],
+    "description": "Home Assistant add-on run.sh script template"
+  },
+
+  "Bashio Config Check": {
+    "prefix": "bashio-check",
+    "body": [
+      "if bashio::config.is_empty '${1:config_key}'; then",
+      "    bashio::exit.nok \"${2:Configuration key} is required\"",
+      "fi"
+    ],
+    "description": "Bashio configuration validation"
+  },
+
+  "Bashio Boolean": {
+    "prefix": "bashio-bool",
+    "body": [
+      "if bashio::config.true '${1:enable_feature}'; then",
+      "    export ${2:FEATURE_ENABLED}=true",
+      "    ${3:# Enable feature}",
+      "fi"
+    ],
+    "description": "Bashio boolean configuration handling"
+  }
+}
